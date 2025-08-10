@@ -61,29 +61,45 @@ These are sent to an **AI backend**, which:
 
 ## 🚀 How to Run Locally
 
-Clone the repository:
-
+```bash
 git clone https://github.com/your-username/AgentForce_WildCoders.git
 cd AgentForce_WildCoders
 
-### Backend Setup
+### ⚙️ Backend Setup
 
 cd backend
 python -m venv venv
-source venv/Scripts/activate (or `source venv/bin/activate` on Unix)
+source venv/Scripts/activate    # Use `source venv/bin/activate` on Mac/Linux
 pip install -r requirements.txt
 uvicorn main:app --reload
 
 ### Frontend Setup
 
-cd ../frontend
+#🛠️ Vite + Tailwind Setup
+
+npm create vite@latest my-persona-app -- --template react
+d my-persona-app
 npm install
-npm run dev
+npm install -D tailwindcss @tailwindcss/vit
+
+#Update vite.config.js:
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+})
+
+#Add Tailwind import in your main CSS file (index.css):
+@import "tailwindcss";
+```
 
 ## 🚀  How to test the deployed AI agent:
 
 - Open any web browser
-- Search for **personaspark.netlify,app**
+- Search for **https://personaspark.netlify.app/**
 - Enter the user-input
 
 ---
@@ -103,5 +119,3 @@ We are a passionate team of developers who built **PersonaSpark** as part of the
 
 
 ---
-
-Made with ❤️ by Team WildCoders.
