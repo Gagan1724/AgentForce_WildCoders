@@ -55,7 +55,7 @@ function PersonaCardWithModal({ persona, color }) {
   const generateCampaigns = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/personas/${persona.id}/generate-campaigns`);
+      const res = await fetch(`https://personaspark-backend.onrender.com/api/personas/${persona.id}/generate-campaigns`);
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       setCampaigns(data);
@@ -214,7 +214,7 @@ function PersonaCard() {
   useEffect(() => {
     const fetchPersonas = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/personas");
+        const res = await fetch("https://personaspark-backend.onrender.com/api/personas");
         if (!res.ok) throw new Error('Failed to fetch personas from the server.');
         const data = await res.json();
         setPersonas(data);
