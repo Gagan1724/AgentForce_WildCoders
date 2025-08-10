@@ -31,7 +31,7 @@ const cardColors = [
     { bg: 'bg-white', border: 'border-indigo-500', text: 'text-indigo-800' }
 ];
 
-// --- FileDropZone Component ---
+// --- FileDropZone Component (Unchanged) ---
 const FileDropZone = ({ onFileSelect, id, label, fileName, iconName = "Upload" }) => {
     const [isDragging, setIsDragging] = useState(false);
     const handleDragEnter = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -52,7 +52,7 @@ const FileDropZone = ({ onFileSelect, id, label, fileName, iconName = "Upload" }
             onClick={() => document.getElementById(id).click()}
             className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-300 cursor-pointer ${isDragging ? 'border-indigo-600 bg-indigo-50/90' : 'border-gray-400 bg-white/60 hover:border-indigo-500'}`}
         >
-            <input type="file" id={id} className="hidden" onChange={handleChange} accept=".csv,.txt,.pdf,.docx,.json" />
+            <input type="file" id={id} className="hidden" onChange={handleChange} accept=".csv,.txt,.pdf,.docx" />
             <Icon name={iconName} size={48} className="mx-auto text-gray-500" />
             <p className="mt-2 text-sm font-semibold text-gray-700">{label}</p>
             <p className="text-xs text-gray-500">Drag & drop or click to upload</p>
@@ -61,47 +61,47 @@ const FileDropZone = ({ onFileSelect, id, label, fileName, iconName = "Upload" }
     );
 };
 
-// --- Highlightable Detail Card Component ---
-const DetailCard = ({ title, children, colorClass, list = false }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    return (
-        <div 
-            className={`p-4 rounded-lg border transition-all duration-300 ${isHovered ? `shadow-lg ring-2 ${colorClass}` : 'shadow-sm'}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <h3 className="font-bold text-lg mb-2">{title}</h3>
-            {list ? <ul className="list-disc list-inside">{children}</ul> : <p>{children}</p>}
-        </div>
-    );
-};
-
-
 // --- MODIFIED: PersonaCardWithModal Component ---
 function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // This component now manages its own persona state to allow for real-time updates.
   const [persona, setPersona] = useState(initialPersona);
   const [campaigns, setCampaigns] = useState([]);
   const [campaignsLoading, setCampaignsLoading] = useState(false);
+
+  // --- NEW: State for WebSocket and Real-time Refinement ---
   const [refinementInput, setRefinementInput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
   const [refinementError, setRefinementError] = useState('');
   const socket = useRef(null);
+  // Generate a unique client ID for this session
   const clientId = useRef(`client_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`).current;
 
+  // Effect to manage WebSocket connection
   useEffect(() => {
     if (isModalOpen) {
+      // Connect to the WebSocket when the modal opens
       const wsUrl = `${WS_BASE_URL}/ws/refine/${clientId}/${persona.id}`;
       socket.current = new WebSocket(wsUrl);
-      socket.current.onopen = () => console.log(`WebSocket connected for persona ${persona.id}`);
+
+      socket.current.onopen = () => {
+        console.log(`WebSocket connected for persona ${persona.id}`);
+        setRefinementError('');
+      };
+
+      // Handle messages from the backend
       socket.current.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        
         if (message.status === 'refining') {
           setIsRefining(true);
           setRefinementError('');
         } else if (message.status === 'success') {
+          console.log("Received updates:", message.data);
+          // Merge the updated fields into the current persona state
           const updatedPersona = { ...persona, ...message.data };
           setPersona(updatedPersona);
+          // Propagate the change to the parent component
           onUpdate(updatedPersona);
           setIsRefining(false);
         } else if (message.error) {
@@ -109,18 +109,25 @@ function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
           setIsRefining(false);
         }
       };
-      socket.current.onclose = () => console.log('WebSocket disconnected');
+
+      socket.current.onclose = () => {
+        console.log('WebSocket disconnected');
+      };
+
       socket.current.onerror = (error) => {
           console.error('WebSocket error:', error);
           setRefinementError('Connection to refinement service failed.');
       };
+
     }
+
+    // Cleanup function to close the socket when the modal is closed
     return () => {
       if (socket.current && socket.current.readyState === WebSocket.OPEN) {
         socket.current.close();
       }
     };
-  }, [isModalOpen, persona.id, onUpdate, clientId]);
+  }, [isModalOpen, persona.id, onUpdate, clientId]); // Added clientId to dependency array
 
   const generateCampaigns = async () => {
     setCampaignsLoading(true);
@@ -146,61 +153,83 @@ function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
 
   return (
     <>
-      <div onClick={() => setIsModalOpen(true)} className={`rounded-xl shadow-lg p-6 cursor-pointer transform hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 ${color.bg} ${color.border} border-t-8 flex flex-col justify-between h-full`}>
+      {/* The clickable preview card */}
+      <div
+        onClick={() => setIsModalOpen(true)}
+        className={`rounded-xl shadow-lg p-6 cursor-pointer transform hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 ${color.bg} ${color.border} border-t-8 flex flex-col justify-between h-full`}
+      >
         <div>
           <h2 className={`text-2xl font-bold ${color.text}`}>{persona.heading}</h2>
           <p className="text-gray-600 mt-1 font-medium">{persona.name} ({persona.age})</p>
           {persona.quote && <p className="italic mt-4 text-gray-700 text-ellipsis overflow-hidden">"{persona.quote}"</p>}
         </div>
-        <div className="text-right mt-4"><span className="text-sm font-semibold text-green-700 hover:text-green-800">View Details & Campaigns &rarr;</span></div>
+        <div className="text-right mt-4">
+          <span className="text-sm font-semibold text-green-700 hover:text-green-800">
+            View Details & Campaigns &rarr;
+          </span>
+        </div>
       </div>
 
+      {/* The Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex justify-center items-center p-4" onClick={() => setIsModalOpen(false)}>
           <div className={`relative bg-white rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border-t-8 ${color.border}`} onClick={(e) => e.stopPropagation()}>
             <div className="p-6 md:p-8">
               <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl z-10">&times;</button>
               <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
+                {/* Persona Details Section (lg:col-span-4) */}
                 <div className="lg:col-span-4 flex flex-col gap-6">
+                  {/* ... All existing persona details UI ... */}
                   <div>
                     <h2 className="text-5xl font-bold text-gray-800">{persona.name}</h2>
                     <p className={`text-xl font-medium ${color.text}`}>{persona.heading}</p>
                   </div>
-                  <DetailCard title="Quote" colorClass="ring-gray-300">"{persona.quote}"</DetailCard>
+                  {persona.quote && <div className="italic text-center text-2xl text-gray-600 bg-gray-50 p-4 rounded-lg border">"{persona.quote}"</div>}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <DetailCard title="Primary Goal" colorClass="ring-blue-300">{persona.goal}</DetailCard>
-                    <DetailCard title="Pain Points" colorClass="ring-red-300" list>
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <h3 className="font-bold text-lg mb-2 text-blue-800">Primary Goal</h3>
+                      <p>{persona.goal}</p>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                      <h3 className="font-bold text-lg mb-2 text-red-800">Pain Points</h3>
+                      <ul className="list-disc list-inside">
                         {persona.pain_points.map((point, i) => <li key={i}>{point}</li>)}
-                    </DetailCard>
+                      </ul>
+                    </div>
                   </div>
-                  {persona.background && <DetailCard title="Background" colorClass="ring-green-300">{persona.background}</DetailCard>}
-                  {persona.behaviour_traits && <DetailCard title="Behavior Traits" colorClass="ring-purple-300" list>
-                      {persona.behaviour_traits.map((trait, i) => <li key={i}>{trait}</li>)}
-                  </DetailCard>}
-                  {persona.recommended_messaging && <DetailCard title="Recommended Messaging" colorClass="ring-yellow-300">{persona.recommended_messaging}</DetailCard>}
+                  {persona.background && <div className="bg-gray-50 p-4 rounded-lg border"><h3 className="font-bold text-lg mb-2">Background</h3><p>{persona.background}</p></div>}
+                  {persona.behaviour_traits && <div className="bg-gray-50 p-4 rounded-lg border"><h3 className="font-bold text-lg mb-2">Behavior Traits</h3><ul className="list-disc list-inside">{persona.behaviour_traits.map((trait, i) => <li key={i}>{trait}</li>)}</ul></div>}
+                  {persona.recommended_messaging && <div className="bg-gray-50 p-4 rounded-lg border"><h3 className="font-bold text-lg mb-2">Recommended Messaging</h3><p>{persona.recommended_messaging}</p></div>}
                 </div>
                 
+                {/* Side Panel Section (lg:col-span-3) */}
                 <div className="lg:col-span-3 flex flex-col gap-6">
-                  {/* REMOVED: Button and loading state for photo generation */}
-                  <div className="relative">
-                      <img src={persona.photo_url} alt={persona.name} className="w-full h-auto object-cover rounded-lg shadow-md" onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/500x500/E2E8F0/4A5568?text=Image'; }}/>
+                  <img src={persona.photo_url || `https://placehold.co/500x500/E2E8F0/4A5568?text=${persona.name.split(' ').map(n=>n[0]).join('')}`} alt={persona.name} className="w-full h-auto object-cover rounded-lg shadow-md" onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/500x500/E2E8F0/4A5568?text=Image'; }}/>
+                  <div className="bg-gray-50 p-4 rounded-lg border">
+                    <h3 className="font-bold text-lg mb-2">Demographics</h3>
+                    {persona.location && <p><strong>Location:</strong> {persona.location}</p>}
+                    <p><strong>Age:</strong> {persona.age}</p>
+                    {persona.gender && <p><strong>Gender:</strong> {persona.gender}</p>}
+                    <p><strong>Occupation:</strong> {persona.occupation}</p>
                   </div>
-                  <DetailCard title="Demographics" colorClass="ring-indigo-300">
-                      <>
-                          {persona.location && <p><strong>Location:</strong> {persona.location}</p>}
-                          <p><strong>Age:</strong> {persona.age}</p>
-                          {persona.gender && <p><strong>Gender:</strong> {persona.gender}</p>}
-                          <p><strong>Occupation:</strong> {persona.occupation}</p>
-                      </>
-                  </DetailCard>
 
+                  {/* --- NEW: Real-time Refinement Chat UI --- */}
                   <div className="border-t pt-6">
                     <h3 className="text-2xl font-semibold mb-3">Refine with AI</h3>
-                    <p className="text-sm text-gray-600 mb-4">Use natural language to update this persona. Try "Change age to 45".</p>
+                    <p className="text-sm text-gray-600 mb-4">Use natural language to update this persona. Try "Change age to 45" or "Add 'Loves coffee' to their traits".</p>
                     <form onSubmit={handleRefinementSubmit}>
                       <div className="flex gap-2">
-                        <input type="text" value={refinementInput} onChange={(e) => setRefinementInput(e.target.value)} placeholder="Type your instruction..." className="flex-grow w-full rounded-md border border-input bg-background px-3 py-2 text-sm" disabled={isRefining} />
-                        <Button type="submit" disabled={isRefining || !refinementInput.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md">{isRefining ? "..." : "Send"}</Button>
+                        <input
+                          type="text"
+                          value={refinementInput}
+                          onChange={(e) => setRefinementInput(e.target.value)}
+                          placeholder="Type your instruction..."
+                          className="flex-grow w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          disabled={isRefining}
+                        />
+                        <Button type="submit" disabled={isRefining || !refinementInput.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md">
+                          {isRefining ? "..." : "Send"}
+                        </Button>
                       </div>
                     </form>
                     {refinementError && <p className="text-red-500 text-sm mt-2">{refinementError}</p>}
@@ -208,7 +237,7 @@ function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
 
                   <div className="border-t pt-6">
                     <h3 className="text-2xl font-semibold mb-3">Campaign Center</h3>
-                    <button onClick={generateCampaigns} disabled={campaignsLoading} className="w-full flex items-center justify-center gap-3 text-white font-bold py-3 px-6 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 shadow-md hover:shadow-lg">
+                    <button onClick={generateCampaigns} disabled={campaignsLoading} className="w-full flex items-center justify-center gap-3 text-white font-bold py-3 px-6 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                       <span>{campaignsLoading ? "Generating..." : "Generate Campaigns"}</span>
                     </button>
@@ -216,7 +245,9 @@ function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
                       <div className="mt-6">
                         <h3 className="text-lg font-semibold">Generated Campaign Ideas</h3>
                         <ul className="list-disc list-inside mt-2 space-y-2 bg-gray-50 p-4 rounded-lg border">
-                          {campaigns.map((camp, idx) => (<li key={idx}><strong className={color.text}>{camp.angle}</strong> — <span className="text-sm italic">{camp.format}</span></li>))}
+                          {campaigns.map((camp, idx) => (
+                            <li key={idx}><strong className={color.text}>{camp.angle}</strong> — <span className="text-sm italic">{camp.format}</span></li>
+                          ))}
                         </ul>
                       </div>
                     )}
@@ -240,6 +271,7 @@ export default function App() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // NEW: Function to update a single persona in the main list
     const handleUpdatePersona = (updatedPersona) => {
         setPersonas(currentPersonas => 
             currentPersonas.map(p => p.id === updatedPersona.id ? updatedPersona : p)
@@ -256,6 +288,7 @@ export default function App() {
         setPersonas([]);
 
         const formData = new FormData();
+        // Use non-empty fallback files if none are selected
         formData.append('survey_data', surveyFile || new File(["No survey data provided."], "survey.txt", {type: "text/plain"}));
         formData.append('customer_reviews', reviewsFile || new File(["No review data provided."], "reviews.txt", {type: "text/plain"}));
         formData.append('product_positioning', productPositioning);
@@ -318,7 +351,7 @@ export default function App() {
                             key={p.id} 
                             initialPersona={p} 
                             color={cardColors[index % cardColors.length]}
-                            onUpdate={handleUpdatePersona}
+                            onUpdate={handleUpdatePersona} // Pass the update handler
                           />
                         ))}
                     </div>
