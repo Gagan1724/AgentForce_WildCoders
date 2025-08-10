@@ -17,7 +17,7 @@ const Icon = ({ name, size = 24, className }) => {
 };
 
 const API_BASE_URL = 'https://personaspark-backend.onrender.com';
-const WS_BASE_URL = 'ws://127.0.0.1:8000';
+const WS_BASE_URL = 'https://personaspark-backend.onrender.com';
 
 const cardColors = [
     { bg: 'bg-white', border: 'border-blue-500', text: 'text-blue-800' },
