@@ -1,7 +1,5 @@
-// src/App.jsx
 import React, { useState, useEffect, useRef } from 'react';
 
-// --- Faux shadcn/ui & lucide-react components for demonstration ---
 const Card = ({ className, children }) => <div className={`border bg-card text-card-foreground shadow-sm rounded-xl ${className}`}>{children}</div>;
 const CardHeader = ({ className, children }) => <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>{children}</div>;
 const CardTitle = ({ className, children }) => <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>;
@@ -18,9 +16,8 @@ const Icon = ({ name, size = 24, className }) => {
     return <div className={className}>{icons[name]}</div>;
 };
 
-// --- Configuration ---
-const API_BASE_URL = 'http://127.0.0.1:8000'; // FastAPI default port
-const WS_BASE_URL = 'ws://127.0.0.1:8000'; // FastAPI WebSocket port
+const API_BASE_URL = 'http://127.0.0.1:8000';
+const WS_BASE_URL = 'ws://127.0.0.1:8000';
 
 const cardColors = [
     { bg: 'bg-white', border: 'border-blue-500', text: 'text-blue-800' },
@@ -31,7 +28,6 @@ const cardColors = [
     { bg: 'bg-white', border: 'border-indigo-500', text: 'text-indigo-800' }
 ];
 
-// --- FileDropZone Component ---
 const FileDropZone = ({ onFileSelect, id, label, fileName, iconName = "Upload" }) => {
     const [isDragging, setIsDragging] = useState(false);
     const handleDragEnter = (e) => { e.preventDefault(); setIsDragging(true); };
@@ -61,7 +57,6 @@ const FileDropZone = ({ onFileSelect, id, label, fileName, iconName = "Upload" }
     );
 };
 
-// --- Highlightable Detail Card Component ---
 const DetailCard = ({ title, children, colorClass, list = false }) => {
     const [isHovered, setIsHovered] = useState(false);
     return (
@@ -77,7 +72,6 @@ const DetailCard = ({ title, children, colorClass, list = false }) => {
 };
 
 
-// --- MODIFIED: PersonaCardWithModal Component ---
 function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [persona, setPersona] = useState(initialPersona);
@@ -181,7 +175,7 @@ function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
                 </div>
                 
                 <div className="lg:col-span-3 flex flex-col gap-6">
-                  {/* REMOVED: Button and loading state for photo generation */}
+                  { }
                   <div className="relative">
                       <img src={persona.photo_url} alt={persona.name} className="w-full h-auto object-cover rounded-lg shadow-md" onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/500x500/E2E8F0/4A5568?text=Image'; }}/>
                   </div>
@@ -231,7 +225,6 @@ function PersonaCardWithModal({ initialPersona, color, onUpdate }) {
   );
 }
 
-// --- Main App Component ---
 export default function App() {
     const [surveyFile, setSurveyFile] = useState(null);
     const [reviewsFile, setReviewsFile] = useState(null);
