@@ -1,7 +1,6 @@
 
 # main.py
-# Enhanced backend for the AI Marketing Persona Designer using FastAPI and Google Gemini.
-
+# Backend for the PERSONA SPARK using FastAPI and Google Gemini.
 import os
 import json
 import time
@@ -15,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Form, UploadFile, File, WebSocket, W
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ValidationError
 
-# --- Application Setup ---
+
 load_dotenv()
 app = FastAPI(
     title="PERSONA SPARK",
@@ -23,7 +22,7 @@ app = FastAPI(
     version="1.8.0", # Incremented version
 )
 
-# --- AI Model Configuration ---
+
 try:
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
@@ -40,14 +39,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- In-Memory Data Storage ---
 personas_db: Dict[str, 'PersonaCard'] = {}
 
-# ========== Helper Functions ==========
 def generate_unique_id(prefix: str = "persona"):
     return f"{prefix}{int(time.time())}{random.randint(1000, 9999)}"
 
-# ========== Pydantic Data Models ==========
+
 class CampaignIdea(BaseModel):
     angle: str = Field(..., example="Focus on Time-Saving Features")
     format: str = Field(..., example="Short-form Video (TikTok/Reels)")
@@ -72,7 +69,6 @@ class PersonaCard(BaseModel):
 class GenerationResponse(BaseModel):
     personas: List[PersonaCard]
 
-# ========== Core AI Logic ==========
 async def generate_personas_with_real_ai(survey_data: str, reviews_data: str, product_positioning: str) -> List[PersonaCard]:
     generation_config = { "response_mime_type": "application/json" }
     model = genai.GenerativeModel("gemini-1.5-flash-latest", generation_config=generation_config)
@@ -138,7 +134,6 @@ async def refine_persona_with_ai(persona: PersonaCard, instruction: str) -> dict
         return {"error": "Failed to refine persona with AI."}
 
 async def generate_campaigns_with_real_ai(persona: PersonaCard) -> List[CampaignIdea]:
-    """Generates marketing campaign ideas for a persona using an AI model."""
     generation_config = {"response_mime_type": "application/json"}
     model = genai.GenerativeModel("gemini-1.5-flash-latest", generation_config=generation_config)
     
@@ -166,7 +161,6 @@ async def generate_campaigns_with_real_ai(persona: PersonaCard) -> List[Campaign
         raise HTTPException(status_code=500, detail="Failed to generate campaigns from AI model.")
 
 
-# ========== WebSocket Manager ==========
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
@@ -182,7 +176,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-# ========== API Endpoints ==========
+
 @app.post("/api/generate-personas", response_model=GenerationResponse, status_code=201)
 async def generate_personas(
     survey_data: UploadFile = File(...), customer_reviews: UploadFile = File(...), product_positioning: str = Form(...)
