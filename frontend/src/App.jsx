@@ -16,7 +16,7 @@ const Icon = ({ name, size = 24, className }) => {
     return <div className={className}>{icons[name]}</div>;
 };
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = 'https://personaspark-backend.onrender.com';
 const WS_BASE_URL = 'ws://127.0.0.1:8000';
 
 const cardColors = [
