@@ -1,7 +1,5 @@
-// src/components/PersonaCard.jsx
 import React, { useState, useEffect } from "react";
 
-// Define a set of reusable, attractive color themes for the cards.
 const cardColors = [
     { bg: 'bg-white', border: 'border-blue-500', text: 'text-blue-800' },
     { bg: 'bg-white', border: 'border-purple-500', text: 'text-purple-800' },
@@ -11,8 +9,7 @@ const cardColors = [
     { bg: 'bg-white', border: 'border-indigo-500', text: 'text-indigo-800' }
 ];
 
-// --- UPDATED MOCK DATA ---
-// Added photoUrl, location, background, previous_experience, and behavior_traits
+//MOCK DATA
 const mockPersonas = [
     { 
       id: 1, 
@@ -50,10 +47,6 @@ const mockPersonas = [
     },
 ];
 
-/**
- * An internal component that renders a single Persona Card and its corresponding Modal.
- * It manages the state for modal visibility and campaign generation.
- */
 function PersonaCardWithModal({ persona, color }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [campaigns, setCampaigns] = useState([]);
@@ -103,7 +96,7 @@ function PersonaCardWithModal({ persona, color }) {
         </div>
       </div>
 
-      {/* The Modal, rendered conditionally with the new enhanced collage layout */}
+      {/* The Modal */}
       {isModalOpen && (
          <div
             className="fixed inset-0 bg-black bg-opacity-75 z-50 flex justify-center items-center p-4"
@@ -117,10 +110,10 @@ function PersonaCardWithModal({ persona, color }) {
                 {/* Close Button */}
                 <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-3xl z-10">&times;</button>
                 
-                {/* Main Grid: Photo on left, details on right */}
+                {/* Main Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
                   
-                  {/* Left Column: Photo */}
+                  {/* Left Column: */}
                   <div className="md:col-span-2">
                     <img 
                       src={persona.photoUrl} 
@@ -137,7 +130,7 @@ function PersonaCardWithModal({ persona, color }) {
                     </div>
                   </div>
 
-                  {/* Right Column: Details Grid */}
+                  {/* Right Column: */}
                   <div className="md:col-span-4 flex flex-col gap-6">
                     <div>
                       <h2 className="text-5xl font-bold text-gray-800">{persona.name}</h2>
@@ -180,7 +173,7 @@ function PersonaCardWithModal({ persona, color }) {
                     {/* Campaign Center */}
                     <div className="mt-4 border-t pt-6">
                       <h3 className="text-2xl font-semibold mb-3">Campaign Center</h3>
-                      {/* --- STYLISH BUTTON --- */}
+                      {/* Generate Campaign Button*/}
                       <button 
                         onClick={generateCampaigns} 
                         disabled={loading} 
@@ -213,10 +206,6 @@ function PersonaCardWithModal({ persona, color }) {
 }
 
 
-/**
- * Main component that fetches persona data and renders the list of cards.
- * This is the default export for the file, renamed to match the original component.
- */
 function PersonaCard() {
   const [personas, setPersonas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
